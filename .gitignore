@@ -19,9 +19,15 @@ question_bank.md
 
 # Cached upstream + extracted PDF text
 bhumipedia_cache/
+api_cache/
 pdf_text/
 extracted_pdfs/
 *.pdf
+
+# Background job artifacts (update_datasets.py)
+data.js.bak
+data.js.new
+dataset_update.json
 
 # Temporary probe / debug scripts
 _*.js

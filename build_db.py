@@ -910,6 +910,56 @@ def extract_db(tables=None):
     except Exception as e:  # local act corpus is optional; DB core must not fail
         print(f"[act_text_source] integration skipped: {e}")
 
+    # ---- Hand-authored local overrides (local_qna.json, added by add_qna.py) ----
+    # Read just before the live API so the service can still supply the
+    # authoritative taxonomy for any question that is not a local override.
+    try:
+        from local_qna import extract_local_entries
+        ln_items = extract_local_entries()
+        ln_added = 0
+        for it in ln_items:
+            q = it["q"]
+            key = re.sub(r"\s+", " ", q.lower()).strip()
+            if key in taken:
+                continue
+            taken.add(key)
+            out.append({"q": q, "a": it["a"], "tpl": bool(it.get("tpl")),
+                        "category": it.get("category"),
+                        "keyword": it.get("keyword")})
+            if it.get("more"):
+                out[-1]["more"] = it["more"]
+            ln_added += 1
+        if ln_added:
+            print(f"[local_qna] added {ln_added} hand-authored Q&A")
+    except Exception as e:  # local overrides are optional; never fail a build
+        print(f"[local_qna] integration skipped: {e}")
+
+    # ---- Live public API (curated citizen-service Q&A, real taxonomy) ----
+    # type1/type2 carry the portal's hand-curated service questions, which are
+    # absent from the SQL dump. Read last so the statutory corpus keeps
+    # precedence on any collision.
+    try:
+        from api_source import extract_api_entries
+        ap_items = extract_api_entries()
+        ap_added = 0
+        for it in ap_items:
+            q = it["q"]
+            key = re.sub(r"\s+", " ", q.lower()).strip()
+            if key in taken:
+                continue
+            taken.add(key)
+            ent = {"q": q, "a": it["a"], "tpl": False,
+                   "category": it.get("category"),
+                   "keyword": it.get("keyword")}
+            if it.get("more"):
+                ent["more"] = it["more"]
+            out.append(ent)
+            ap_added += 1
+        if ap_added:
+            print(f"[api_source] added {ap_added} API-derived Q&A")
+    except Exception as e:  # the public API is optional; DB core must not fail
+        print(f"[api_source] integration skipped: {e}")
+
     return out
 
 

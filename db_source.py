@@ -24,6 +24,13 @@ TABLES = [
     "acts_schedules",
     "acts_subschedules",
     "blogs_blog",
+    # public_api.build_full_forums reads these two; without them the live
+    # PostgreSQL path serves an empty /api/forums/full/ even though the SQL
+    # snapshot (same schema) has them. build_full_forums applies its own
+    # "approved + open" filter, so they are exported unfiltered like the child
+    # act tables.
+    "forum_group",
+    "forum_topic",
 ]
 
 # Mirror the pg_dump export scope ("approved-content export"): acts with

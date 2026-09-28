@@ -9,10 +9,11 @@ corpus, matched with a hand-written lexical scorer and returned verbatim. That
 means replies are exact and cannot hallucinate — and, as the trade-off, the bot
 can only answer what is in the dataset.
 
-- **57,678** Q&A pairs in `data.js`
+- **48,057** Q&A pairs in `data.js`
 - Plus PDF passage chunks in `docs.js` for long-form document search
 - Runs **fully offline** from static files; an optional live API serves the same
-  answers from PostgreSQL
+  answers from the bundled snapshot or PostgreSQL
+- Adding content: see `DEPLOYMENT.md` (`add_qna.py`)
 
 ---
 
@@ -27,7 +28,7 @@ can only answer what is in the dataset.
         ┌────────────────────┴────────────────────┐
         │                                         │
   data.js (offline)                    PostgreSQL (live)
-  57,678 Q&A                           server.py → scorer.py
+  48,057 Q&A                           server.py → scorer.py
 ```
 
 The client is plain static JavaScript — no bundler, no framework, no build step.
@@ -99,9 +100,11 @@ Endpoints:
 > re-supplied.
 
 ```bash
-python build_data.py      # → data.js  (57,678 entries)
+python build_data.py      # → data.js  (48,057 entries)
 python build_docs.py      # → docs.js  + docs_report.json (downloads act PDFs)
 ```
+
+To add new questions and answers, use `add_qna.py` (see `DEPLOYMENT.md`):
 
 `build_data.py` reads the SQL dump named by `build_db.SQL_PATH`
 (`d71_ilkms_5000_dump_2026.08.23.sql`) and chains the PDF and Bhumipedia
@@ -130,6 +133,8 @@ python bhumipedia_source.py --refresh   # bypass the HTTP cache
 | Act PDFs → Q&A | `pdf_source.extract_pdf_entries()` | section-level Q&A |
 | Act PDFs → passages | `build_docs.py` | `docs.js` chunked text |
 | Portal REST → Q&A | `bhumipedia_source.extract_bhumipedia_entries()` | acts, sections, subsections, schedules |
+| Live Q&A API → Q&A | `api_source.extract_api_entries()` | curated service Q&A (type1/type2, cached) |
+| Hand-authored → Q&A | `local_qna.py` / `add_qna.py` | answers stored in `local_qna.json` |
 | Live PostgreSQL → Q&A | `db_source.load_tables_from_db()` | identical structure to the SQL path |
 | Clean + dedup | `build_data.py` | `data.js` |
 
@@ -166,7 +171,7 @@ narrows nothing down; suggestions appear once a sharper word is present.
 ## Tests
 
 ```bash
-node test.js          # 35 assertions — dataset=57678
+node test.js          # 35 assertions — dataset=48057
 node test_samples.js  # strict expected-answer samples
 ```
 
@@ -184,12 +189,20 @@ over the real dataset.
 ```
 app.js                  frontend: scorer, related-question suggestions, chat UI
 index.html              static shell (loads app.js, data.js, docs.js)
-data.js                 57,678 Q&A  (generated)
+data.js                 48,057 Q&A  (generated)
 docs.js                 PDF passage chunks  (generated)
+
+add_qna.py              CLI to add/inspect hand-authored Q&A (see DEPLOYMENT.md)
+local_qna.py            store reader for hand-authored Q&A (local_qna.json)
+api_source.py           live Q&A API loader (cached, narrative-filtered)
+public_api.py           public dataset API mirroring bhumipedia.land.gov.bd
+qa_dedup.py             canonicalisation + dedup shared by build & server
+curated_labels.txt      EXACT-tier questions dedup must never remove
 
 build_db.py             SQL parsing, cleaning, dedup, Q&A generation
 build_data.py           writes data.js
 build_docs.py           downloads act PDFs → docs.js
+update_datasets.py      background job: refresh live API → rebuild data.js → verify (see DEPLOYMENT.md §5b)
 pdf_source.py           PDF-derived Q&A
 bhumipedia_source.py    Bhumipedia REST loader + Q&A generator (cached)
 db_source.py            live PostgreSQL loader
@@ -200,7 +213,8 @@ server.py               live API server
 test.js                 core regression suite
 test_samples.js         expected-answer samples
 requirements.txt        Python dependencies
-deployment-guide.html   deployment walkthrough
+DEPLOYMENT.md           deployment + content-update guide
+deployment-guide.html   deployment walkthrough (hardening, services, proxies)
 api-integration-guide.html  API contract
 ```
 
@@ -212,6 +226,8 @@ api-integration-guide.html  API contract
 | --- | --- |
 | iLKMS PostgreSQL | Acts, sections, subsections, schedules, subschedules, blogs |
 | Bhumipedia REST API | Acts, sections, subsections, schedules, subschedules, ebooks, blogs, category |
+| Bhumipedia Q&A API | Curated citizen-service Q&A (type1/type2, via `api_source.py`) |
+| Hand-authored overrides | `local_qna.json` via `add_qna.py` |
 | Bhumipedia act PDFs | Section text and long-form passages |
 
 Not committed (regenerate or re-supply as needed): `*.sql`, `*.csv`,
