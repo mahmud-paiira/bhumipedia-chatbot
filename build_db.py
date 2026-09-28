@@ -892,6 +892,24 @@ def extract_db(tables=None):
     except Exception as e:  # portal source is optional; DB core must not fail
         print(f"[bhumipedia_source] integration skipped: {e}")
 
+    # ---- Local full act texts (sections, definitions, schedules) ----
+    try:
+        from act_text_source import extract_act_entries
+        at_items = extract_act_entries()
+        at_added = 0
+        for it in at_items:
+            q = it["q"]
+            key = re.sub(r"\s+", " ", q.lower()).strip()
+            if key in taken:
+                continue
+            taken.add(key)
+            out.append({"q": q, "a": it["a"], "tpl": it.get("tpl", False)})
+            at_added += 1
+        if at_added:
+            print(f"[act_text_source] added {at_added} act-text-derived Q&A")
+    except Exception as e:  # local act corpus is optional; DB core must not fail
+        print(f"[act_text_source] integration skipped: {e}")
+
     return out
 
 

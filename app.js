@@ -698,7 +698,7 @@ function setLang(l) { LANG = l === "en" ? "en" : "bn"; }
   function send(raw) {
     var msg = String(raw || "").trim();
     if (!msg) return;
-    clearLiveSug();
+    closeLiveSug();
     inpEl.value = "";
     addMsg("user", msg);
     var lc = detectLang(norm(msg));
@@ -756,48 +756,110 @@ function setLang(l) { LANG = l === "en" ? "en" : "bn"; }
     send(inpEl.value);
   };
 
-  /* ---- live related-question chips above the input box ---------------- */
+  /* ---- live question suggestions: a dropdown under the input box ------- */
 
   var sugTimer = null;
   var composing = false;
+  var sugList = [];
+  var sugSel = -1;
 
-  function clearLiveSug() {
+  function closeLiveSug() {
     if (sugTimer) { clearTimeout(sugTimer); sugTimer = null; }
+    sugList = []; sugSel = -1;
     if (!liveSugEl) return;
     liveSugEl.textContent = "";
     liveSugEl.className = "live-sug";
+    if (inpEl) {
+      inpEl.setAttribute("aria-expanded", "false");
+      inpEl.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  function markSug() {
+    if (!liveSugEl) return;
+    var items = liveSugEl.querySelectorAll("li");
+    for (var i = 0; i < items.length; i++) {
+      var on = i === sugSel;
+      items[i].className = on ? "on" : "";
+      items[i].setAttribute("aria-selected", on ? "true" : "false");
+      if (on && inpEl) inpEl.setAttribute("aria-activedescendant", items[i].id);
+    }
+    if (sugSel >= 0 && items[sugSel] && items[sugSel].scrollIntoView)
+      items[sugSel].scrollIntoView({ block: "nearest" });
   }
 
   function renderLiveSug(list) {
     if (!liveSugEl) return;
+    if (!list || !list.length) { closeLiveSug(); return; }
+    sugList = list.slice(0, SUG_MAX);
+    sugSel = -1;
     liveSugEl.textContent = "";
-    if (!list || !list.length) { liveSugEl.className = "live-sug"; return; }
+
     var lab = document.createElement("div");
     lab.className = "lab";
     lab.textContent = LANG === "en" ? "Related questions" : "সম্পর্কিত প্রশ্ন";
-    var row = document.createElement("div");
-    row.className = "row";
-    list.forEach(function (q) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.textContent = q;
-      b.onclick = function () {
-        clearLiveSug();
-        inpEl.value = "";
-        send(q);
-      };
-      row.appendChild(b);
+
+    var ul = document.createElement("ul");
+    ul.id = "liveSugList";
+    ul.setAttribute("role", "listbox");
+    sugList.forEach(function (q, i) {
+      var li = document.createElement("li");
+      li.id = "sugOpt" + i;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
+      var mk = document.createElement("span");
+      mk.className = "mark";
+      mk.textContent = "▸";
+      li.appendChild(mk);
+      li.appendChild(document.createTextNode(" " + q));
+      li.addEventListener("mouseenter", function () { sugSel = i; markSug(); });
+      li.addEventListener("click", function () { takeSug(i); });
+      ul.appendChild(li);
     });
+
+    var foot = document.createElement("div");
+    foot.className = "hintrow";
+    foot.textContent = LANG === "en"
+      ? "↑ ↓ choose • Enter to fill • Esc to close"
+      : "↑ ↓ বাছাই • Enter দিয়ে বসান • Esc দিয়ে বন্ধ";
+
     liveSugEl.appendChild(lab);
-    liveSugEl.appendChild(row);
+    liveSugEl.appendChild(ul);
+    liveSugEl.appendChild(foot);
     liveSugEl.className = "live-sug on";
+    if (inpEl) {
+      inpEl.setAttribute("aria-expanded", "true");
+      inpEl.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  // Picking a suggestion fills the box rather than sending on the spot, so a
+  // mis-click can still be corrected before the question is actually asked.
+  function takeSug(i) {
+    if (i < 0 || i >= sugList.length) return;
+    var q = sugList[i];
+    closeLiveSug();
+    if (!inpEl) return;
+    inpEl.value = q;
+    inpEl.focus();
+    if (inpEl.setSelectionRange) {
+      try { inpEl.setSelectionRange(q.length, q.length); } catch (e) {}
+    }
+  }
+
+  function moveSug(d) {
+    var n = sugList.length;
+    if (!n) return false;
+    sugSel = sugSel < 0 ? (d > 0 ? 0 : n - 1) : (sugSel + d + n) % n;
+    markSug();
+    return true;
   }
 
   function refreshLiveSug() {
     if (sugTimer) { clearTimeout(sugTimer); sugTimer = null; }
     if (composing) return;
     var v = inpEl.value;
-    if (!v || !v.trim()) { clearLiveSug(); return; }
+    if (!v || !v.trim()) { closeLiveSug(); return; }
     sugTimer = setTimeout(function () {
       sugTimer = null;
       var list = [];
@@ -808,19 +870,50 @@ function setLang(l) { LANG = l === "en" ? "en" : "bn"; }
 
   if (inpEl) {
     inpEl.addEventListener("input", refreshLiveSug);
+
     // Bengali/Assamese input runs through an IME: never guess mid-composition.
     inpEl.addEventListener("compositionstart", function () {
       composing = true;
-      clearLiveSug();
+      closeLiveSug();
     });
     inpEl.addEventListener("compositionend", function () {
       composing = false;
       refreshLiveSug();
     });
-    inpEl.addEventListener("blur", function () {
-      if (sugTimer) { clearTimeout(sugTimer); sugTimer = null; }
+
+    inpEl.addEventListener("keydown", function (ev) {
+      if (composing || ev.isComposing) return;
+      var k = ev.key;
+      if (k === "ArrowDown" || k === "ArrowUp") {
+        if (moveSug(k === "ArrowDown" ? 1 : -1)) ev.preventDefault();
+        return;
+      }
+      if (k === "Enter") {
+        // Only a highlighted row swallows Enter, so typing a full question and
+        // hitting Enter still sends it instead of completing to a suggestion.
+        if (sugSel >= 0) { ev.preventDefault(); takeSug(sugSel); }
+        return;
+      }
+      if (k === "Escape") {
+        if (sugList.length) { ev.preventDefault(); closeLiveSug(); }
+        return;
+      }
+      if (k === "Tab") closeLiveSug();
     });
   }
+
+  if (liveSugEl) {
+    // The rows are not focusable, so a plain mousedown would blur the input
+    // and close the list before the click landed. Swallow it to keep focus.
+    liveSugEl.addEventListener("mousedown", function (ev) { ev.preventDefault(); });
+  }
+
+  document.addEventListener("click", function (ev) {
+    if (!sugList.length) return;
+    if (liveSugEl && liveSugEl.contains(ev.target)) return;
+    if (inpEl && inpEl.contains(ev.target)) return;
+    closeLiveSug();
+  });
 
   function welcome(force) {
     var qn = bnNum(DATASET && DATASET.length ? DATASET.length : 0);

@@ -132,16 +132,29 @@
     font-family:inherit;font-size:13px;padding:7px 15px;border-radius:999px;cursor:pointer;transition:.18s;white-space:nowrap;
   }
   .chips button:hover{background:var(--user-grad);border-color:transparent;color:#fff}
-  .live-sug{display:none;padding:0 12px 2px;flex:none}
-  .live-sug.on{display:block}
-  .live-sug .lab{font-size:11.5px;color:var(--muted);margin:0 2px 6px}
-  .live-sug .row{display:flex;flex-wrap:wrap;gap:7px;max-height:86px;overflow-y:auto}
-  .live-sug button{
-    flex:none;max-width:100%;border:1px solid rgba(37,211,153,.4);background:var(--accent-soft);color:#7df0c8;
-    font-family:inherit;font-size:12.5px;padding:5px 12px;border-radius:999px;cursor:pointer;transition:.16s;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  .composer{position:relative;flex:none}
+  .live-sug{
+    position:absolute;left:10px;right:10px;bottom:100%;z-index:40;display:none;margin-bottom:8px;
+    background:rgba(8,38,31,.97);border:1px solid rgba(37,211,153,.32);border-radius:16px;overflow:hidden;
+    box-shadow:0 20px 44px rgba(0,0,0,.55);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
   }
-  .live-sug button:hover{background:rgba(37,211,153,.3);color:#fff}
+  .live-sug.on{display:block;animation:dropin .16s ease}
+  @keyframes dropin{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .live-sug .lab{font-size:11px;color:var(--muted);padding:8px 13px 5px;letter-spacing:.2px}
+  .live-sug ul{list-style:none;max-height:min(216px,38vh);overflow-y:auto;padding:0 6px 6px;overscroll-behavior:contain}
+  .live-sug ul::-webkit-scrollbar{width:5px}
+  .live-sug ul::-webkit-scrollbar-thumb{background:rgba(37,211,153,.35);border-radius:3px}
+  .live-sug li{
+    display:block;padding:8px 11px;border-radius:10px;font-size:13.5px;line-height:1.5;
+    color:#d9fff1;cursor:pointer;transition:background .12s,color .12s;
+  }
+  .live-sug li .mark{color:var(--accent);font-weight:700;margin-right:6px}
+  .live-sug li.on{background:var(--accent-soft);color:#fff}
+  .live-sug .hintrow{
+    font-size:10.5px;color:rgba(255,255,255,.34);padding:6px 13px 7px;
+    border-top:1px solid var(--line);background:rgba(0,0,0,.18);
+  }
   form{display:flex;gap:9px;padding:10px 12px 11px;flex:none}
   #inp{
     flex:1;min-width:0;background:rgba(255,255,255,.09);border:1px solid var(--line);outline:none;color:#fff;
@@ -184,18 +197,21 @@
   </header>
   <div id="chat"></div>
   <div class="chips" id="chips"></div>
-  <div class="live-sug" id="liveSug"></div>
-  <form id="form" autocomplete="off">
-    <input id="inp" type="text" placeholder="আপনার প্রশ্ন লিখুন…" maxlength="500" autofocus>
-    <button class="send" type="submit" title="পাঠান"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 20.85 12 3.4 3.6l2.5 7.2H15l-2 3.9z"/></svg></button>
-  </form>
+  <div class="composer">
+    <div class="live-sug" id="liveSug"></div>
+    <form id="form" autocomplete="off">
+      <input id="inp" type="text" placeholder="আপনার প্রশ্ন লিখুন…" maxlength="500" autofocus
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="liveSugList">
+      <button class="send" type="submit" title="পাঠান"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 20.85 12 3.4 3.6l2.5 7.2H15l-2 3.9z"/></svg></button>
+    </form>
+  </div>
   <div class="hint"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 4h2v8h-2zm0 10h2v2h-2z"/></svg><span>এন্টার চাপুন • সম্পূর্ণ অফলাইনে চলে • কোনো ইন্টারনেট লাগে না</span></div>
   <footer>উৎস: iLKMS আইন-বিধি, ধারা ও ব্লগ ডাটাবেস • বাংলা ও ইংরেজি উভয় ভাষায় চ্যাট করা যায়</footer>
 </div>
 
-<script src="data.js?v=8"></script>
-<script src="docs.js?v=8"></script>
-<script src="app.js?v=8"></script>
+<script src="data.js?v=9"></script>
+<script src="docs.js?v=9"></script>
+<script src="app.js?v=9"></script>
 <script>
   // Optional: point the chatbot at the live API server (server.py).
   // Answers then come from the live iLKMS database; data.js is an offline
