@@ -1,0 +1,10 @@
+# Live API server (server.py, db_source.py)
+python-dotenv>=1.0
+psycopg2-binary>=2.9
+
+# Bhumipedia REST loader (bhumipedia_source.py) and act PDF fetcher (build_docs.py)
+requests>=2.31
+
+# Act PDF text extraction
+pypdf>=4.0
+PyMuPDF>=1.24        # extract_pdfs.py (imports it as `fitz`)
