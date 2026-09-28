@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ভূমি বন্ধু Chatbot — Deployment Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -weasy-hyphens: none; }
+  body {
+    font-family: "Segoe UI", "Noto Sans Bengali", Arial, sans-serif;
+    color: #1d2b28; font-size: 10.5pt; line-height: 1.55; margin: 0;
+  }
+  h1, h2, h3, h4 { font-family: "Segoe UI", "Noto Sans Bengali", Arial, sans-serif; color: #0a4a3a; }
+  h1 { font-size: 24pt; margin: 0 0 4pt; }
+  h2 {
+    font-size: 15pt; margin: 22pt 0 8pt; padding: 5pt 9pt;
+    background: #0a4a3a; color: #fff; border-radius: 5pt;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 12pt; margin: 14pt 0 5pt; color: #0d6b4f; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; margin: 10pt 0 4pt; color: #12614a; page-break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code, pre, kbd {
+    font-family: Consolas, "Courier New", monospace;
+  }
+  code { background: #eef4f1; color: #0a4a3a; padding: 1pt 3pt; border-radius: 3pt; font-size: 9.5pt; }
+  pre {
+    background: #0f2a23; color: #d7f5e8; padding: 9pt 11pt; border-radius: 6pt;
+    font-size: 8.8pt; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word;
+    margin: 0 0 9pt; border-left: 3pt solid #25d399;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 10pt; font-size: 9.5pt; }
+  th, td { border: 1px solid #cfe0da; padding: 4.5pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #e6f3ee; color: #0a4a3a; font-weight: 600; }
+  tr:nth-child(even) td { background: #f6faf9; }
+  .cover {
+    border: 1.5pt solid #0a4a3a; border-radius: 8pt; padding: 18pt 20pt; margin-bottom: 16pt;
+    background: linear-gradient(140deg, #f2faf7, #e2f3ec);
+  }
+  .cover .kicker { font-size: 9.5pt; letter-spacing: 1.5pt; text-transform: uppercase; color: #0d6b4f; font-weight: 700; }
+  .cover .sub { font-size: 11pt; color: #2c4a42; margin-top: 4pt; }
+  .meta { margin-top: 12pt; font-size: 9pt; color: #40605a; }
+  .meta td { border: none; padding: 1pt 0; background: none !important; }
+  .meta td:first-child { width: 130pt; color: #0a4a3a; font-weight: 600; }
+  .note, .warn, .tip {
+    border-radius: 5pt; padding: 8pt 11pt; margin: 0 0 10pt; font-size: 9.8pt;
+    page-break-inside: avoid;
+  }
+  .note { background: #eef4f1; border-left: 3pt solid #0d6b4f; }
+  .warn { background: #fdf1e7; border-left: 3pt solid #d97a2b; }
+  .tip  { background: #e9f6f0; border-left: 3pt solid #25d399; }
+  .note b, .warn b, .tip b { color: #0a4a3a; }
+  .toc { background: #f6faf9; border: 1px solid #cfe0da; border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 6pt; }
+  .toc h3 { margin-top: 0; }
+  .toc ol { margin-bottom: 0; }
+  .toc a { color: #0d6b4f; text-decoration: none; }
+  .badge {
+    display: inline-block; font-size: 8pt; font-weight: 700; padding: 1pt 6pt;
+    border-radius: 999pt; background: #25d399; color: #063427; margin-right: 5pt;
+  }
+  .badge.alt { background: #0d6b4f; color: #fff; }
+  .step { margin: 0 0 4pt; font-weight: 700; color: #0a4a3a; }
+  .small { font-size: 9pt; color: #4a6a63; }
+  .kv { font-size: 9.5pt; }
+  hr { border: none; border-top: 1px solid #cfe0da; margin: 16pt 0; }
+  .pagebreak { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  footer { margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #cfe0da; font-size: 8.5pt; color: #6a857e; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">Deployment Guide</div>
+  <h1>ভূমি বন্ধু — Land Law Chatbot</h1>
+  <div class="sub">iLKMS-driven Bengali land-law assistant &mdash; static offline mode &amp; live PostgreSQL API mode</div>
+  <table class="meta">
+    <tr><td>Document</td><td>Deployment Guide (HTML + PDF)</td></tr>
+    <tr><td>Project</td><td>Chatbot (ভূমি আইন চ্যাটবট)</td></tr>
+    <tr><td>Source of truth</td><td>iLKMS PostgreSQL export (<code>d71_ilkms_5000_dump_2026.08.23.sql</code>)</td></tr>
+    <tr><td>Runtime</td><td>Python 3.12 · psycopg2 · python-dotenv · Node.js (build only)</td></tr>
+    <tr><td>Audience</td><td>System administrators &amp; backend developers</td></tr>
+  </table>
+</div>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#arch">Architecture &amp; deployment modes</a></li>
+    <li><a href="#prereq">Prerequisites</a></li>
+    <li><a href="#files">Project file reference</a></li>
+    <li><a href="#offline">Mode A — Static / offline deployment</a></li>
+    <li><a href="#live">Mode B — Live API deployment</a></li>
+    <li><a href="#config">Configuration (.env)</a></li>
+    <li><a href="#run">Running the server</a></li>
+    <li><a href="#prod">Production hardening (service, reverse proxy, TLS)</a></li>
+    <li><a href="#build">Rebuilding the offline dataset</a></li>
+    <li><a href="#monitor">Health checks &amp; monitoring</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#checklist">Go-live checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="arch">1. Architecture &amp; deployment modes</h2>
+<p>
+  The chatbot is a browser app (<code>index.html</code> + <code>data.js</code> + <code>docs.js</code> + <code>app.js</code>)
+  that answers land-law questions. Answers are produced by a single Q&amp;A pipeline
+  (<code>build_db.extract_db()</code>) which can be fed either from a static SQL export or from a live database.
+  The browser can therefore operate in two modes:
+</p>
+<table>
+  <tr><th>Mode</th><th>Data source</th><th>Components</th><th>Use when</th></tr>
+  <tr>
+    <td><span class="badge alt">A</span>Static / offline</td>
+    <td><code>data.js</code> + <code>docs.js</code> bundled at build time</td>
+    <td>Any static web server (or <code>file://</code>)</td>
+    <td>No network/DB access; frozen approved snapshot; lowest cost</td>
+  </tr>
+  <tr>
+    <td><span class="badge">B</span>Live API</td>
+    <td>Live iLKMS PostgreSQL via <code>server.py</code></td>
+    <td><code>server.py</code> + <code>db_source.py</code> + <code>scorer.py</code> + static files</td>
+    <td>Answers must reflect live updates while still serving the curated snapshot offline</td>
+  </tr>
+</table>
+<div class="note">
+  <b>Graceful degradation.</b> In Mode B the browser calls <code>/api/search</code> first. If the API or database is
+  unreachable, it automatically falls back to the bundled <code>data.js</code>. The API server itself also keeps serving
+  <code>/api/health</code> even when the database is down.
+</div>
+
+<pre><code>Browser (index.html, app.js)
+        │  fetch /api/search?q=…&amp;lang=bn        (Mode B, primary)
+        ▼
+server.py  ──uses──►  scorer.py  ──uses──►  dataset in memory
+        │                                        ▲
+        │  loads tables                          │ build_dataset()
+        ▼                                        │
+db_source.py ──psycopg2──► PostgreSQL (iLKMS)    │
+                                                 │
+build_db.extract_db() ───────────────────────────┘
+        ▲
+        │  (Mode A: build-time only)
+build_data.py ──► data.js     build_docs.py ──► docs.js</code></pre>
+
+<h2 id="prereq">2. Prerequisites</h2>
+<h3>2.1 Server host (Mode B)</h3>
+<ul>
+  <li><b>Python 3.10+</b> (tested on 3.12.10).</li>
+  <li>Python packages: <code>psycopg2-binary</code> (or <code>psycopg2</code>) and <code>python-dotenv</code>.
+      <code>server.py</code> uses only the standard library otherwise (no Flask required).</li>
+  <li>Network access from the host to the PostgreSQL instance (default port 5432).</li>
+  <li>A PostgreSQL role with <b>read-only</b> access to the six iLKMS tables (recommended).</li>
+</ul>
+<pre><code>pip install psycopg2-binary python-dotenv</code></pre>
+
+<h3>2.2 Build host (Mode A, optional)</h3>
+<ul>
+  <li>Node.js 18+ (tested on v24.12.0) — only for running <code>test.js</code> / <code>test_samples.js</code>.</li>
+  <li>The SQL export file in the project root.</li>
+</ul>
+
+<div class="warn">
+  <b>Windows console note.</b> The Python build scripts re-wrap <code>stdout</code> as UTF-8 because Bengali text breaks the
+  legacy cp1252 console. If you see <code>UnicodeEncodeError</code>, run with <code>set PYTHONUTF8=1</code> or
+  <code>chcp 65001</code>.
+</div>
+
+<h2 id="files">3. Project file reference</h2>
+<table>
+  <tr><th>File</th><th>Role</th><th>Mode</th></tr>
+  <tr><td><code>index.html</code></td><td>Chat UI; sets <code>window.__BHUMI_API__</code></td><td>A + B</td></tr>
+  <tr><td><code>app.js</code></td><td>Client logic: scoring, rendering, API-first + offline fallback</td><td>A + B</td></tr>
+  <tr><td><code>data.js</code></td><td>Bundled Q&amp;A dataset (offline answers)</td><td>A (fallback in B)</td></tr>
+  <tr><td><code>docs.js</code></td><td>Bundled act/document text for document search</td><td>A (fallback in B)</td></tr>
+  <tr><td><code>server.py</code></td><td>HTTP API server (<code>/api/search</code>, <code>/api/health</code>, <code>/api/stats</code>)</td><td>B</td></tr>
+  <tr><td><code>db_source.py</code></td><td>psycopg2 loader; returns the same <code>tables</code> structure as the SQL parser</td><td>B</td></tr>
+  <tr><td><code>scorer.py</code></td><td>Python port of the client scoring / answer-selection logic</td><td>B</td></tr>
+  <tr><td><code>build_db.py</code></td><td><code>extract_db(tables=None)</code> — shared Q&amp;A pipeline</td><td>A + B</td></tr>
+  <tr><td><code>build_data.py</code></td><td>Writes <code>data.js</code></td><td>A (build)</td></tr>
+  <tr><td><code>build_docs.py</code></td><td>Writes <code>docs.js</code></td><td>A (build)</td></tr>
+  <tr><td><code>extract_pdfs.py</code> / <code>pdf_source.py</code></td><td>PDF text layering &amp; PDF-derived Q&amp;A</td><td>A (build)</td></tr>
+  <tr><td><code>.env</code></td><td>Runtime configuration (DB URL, bind address)</td><td>B</td></tr>
+</table>
+
+<h2 id="offline">4. Mode A — Static / offline deployment</h2>
+<ol>
+  <li>Ensure <code>data.js</code>, <code>docs.js</code>, <code>app.js</code> and <code>index.html</code> are present in the same directory.</li>
+  <li>Serve the directory with any static web server. For a quick local check:
+    <pre><code># Python (recommended over file:// so localStorage &amp; fetch work consistently)
+python -m http.server 8080
+# then open http://127.0.0.1:8080/</code></pre>
+  </li>
+  <li>Leave <code>window.__BHUMI_API__ = "";</code> in <code>index.html</code> (default). The app uses the bundled dataset.</li>
+</ol>
+<div class="tip">
+  <b>Cache busting.</b> Static asset URLs use a version query (<code>?v=6</code>). After rebuilding <code>data.js</code> or
+  <code>docs.js</code>, bump the <code>v</code> number in <code>index.html</code> so browsers reload the new file.
+</div>
+
+<h2 id="live">5. Mode B — Live API deployment</h2>
+<div class="step">Step 1 — Copy the environment template</div>
+<pre><code>copy .env.example .env      # Windows
+cp .env.example .env        # Linux/macOS</code></pre>
+
+<div class="step">Step 2 — Set the database connection</div>
+<p>Edit <code>.env</code> and set <code>DATABASE_URL</code> (see section 6). Use a read-only role where possible.</p>
+
+<div class="step">Step 3 — Verify connectivity</div>
+<pre><code>python -c "import db_source; tb=db_source.load_tables_from_db(); print({k:len(v['rows']) for k,v in tb.items()})"</code></pre>
+<p class="small">Expected output lists the six tables with their row counts. If it prints an error, see section 11.</p>
+
+<div class="step">Step 4 — Start the API server</div>
+<pre><code>python server.py
+# [server] live dataset ready: 46853 entries
+# [server] listening on http://127.0.0.1:8790</code></pre>
+
+<div class="step">Step 5 — Point the UI at the API</div>
+<p>In <code>index.html</code>, set the base URL (no trailing slash):</p>
+<pre><code>window.__BHUMI_API__ = "http://127.0.0.1:8790";</code></pre>
+
+<div class="step">Step 6 — Verify end to end</div>
+<pre><code>curl "http://127.0.0.1:8790/api/health"
+curl "http://127.0.0.1:8790/api/search?q=%E0%A6%96%E0%A6%A4%E0%A6%BF%E0%A6%AF%E0%A6%BE%E0%A6%A8%20%E0%A6%95%E0%A6%BF%3F&amp;lang=bn"</code></pre>
+
+<div class="note">
+  <b>Dataset refresh.</b> The dataset is built once at server start. Restart <code>server.py</code> after the source
+  database changes to pick up new content. Building the live dataset from the same export yields the same answers as the
+  bundled <code>data.js</code>.
+</div>
+
+<h2 id="config">6. Configuration (<code>.env</code>)</h2>
+<table>
+  <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td><code>postgresql://localhost/iLKMS</code></td><td>psycopg2 DSN. Accepts a URL or keyword string.</td></tr>
+  <tr><td><code>BHUMI_HOST</code></td><td><code>127.0.0.1</code></td><td>Bind address. Use <code>0.0.0.0</code> to accept external connections.</td></tr>
+  <tr><td><code>BHUMI_PORT</code></td><td><code>8790</code></td><td>Listening port.</td></tr>
+</table>
+<h4>Connection string examples</h4>
+<pre><code># URL form
+DATABASE_URL=postgresql://ilkms_ro:secret@10.0.0.5:5432/iLKMS
+
+# keyword form (useful for special characters in the password)
+DATABASE_URL=host=10.0.0.5 port=5432 dbname=iLKMS user=ilkms_ro password=secret sslmode=require</code></pre>
+<div class="warn">
+  <b>Never commit <code>.env</code>.</b> Keep it out of version control and restrict file permissions
+  (<code>chmod 600 .env</code> on Linux). Use a dedicated read-only database role.
+</div>
+
+<h2 id="run">7. Running the server</h2>
+<h3>7.1 Foreground (development)</h3>
+<pre><code>python server.py</code></pre>
+<h3>7.2 Background (Windows PowerShell)</h3>
+<pre><code>Start-Process -FilePath python -ArgumentList "server.py" -WorkingDirectory "C:\path\to\Chatbot" -WindowStyle Hidden -RedirectStandardOutput "srv.log" -RedirectStandardError "srv_err.log"</code></pre>
+<h3>7.3 Background (Linux)</h3>
+<pre><code>nohup python server.py &gt; srv.log 2&gt;&amp;1 &amp;</code></pre>
+<div class="tip">
+  <b>Reverse proxy tip.</b> For production, bind to <code>127.0.0.1</code> and let nginx terminate TLS and forward to
+  <code>127.0.0.1:8790</code> (section 8.2).
+</div>
+
+<h2 id="prod">8. Production hardening</h2>
+<h3>8.1 Run as a service (Linux — systemd)</h3>
+<pre><code># /etc/systemd/system/bhumi-api.service
+[Unit]
+Description=Bhumi Bondhu Chatbot API
+After=network.target postgresql.service
+
+[Service]
+WorkingDirectory=/opt/bhumi-chatbot
+EnvironmentFile=/opt/bhumi-chatbot/.env
+ExecStart=/usr/bin/python3 server.py
+Restart=always
+RestartSec=3
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now bhumi-api
+sudo systemctl status bhumi-api</code></pre>
+
+<h3>8.2 Run as a service (Windows — Task Scheduler or NSSM)</h3>
+<pre><code># NSSM example
+nssm install BhumiApi "C:\Python312\python.exe" "C:\path\to\Chatbot\server.py"
+nssm set BhumiApi AppDirectory "C:\path\to\Chatbot"
+nssm set BhumiApi AppEnvironmentExtra DATABASE_URL=postgresql://ilkms_ro:secret@10.0.0.5:5432/iLKMS
+nssm start BhumiApi</code></pre>
+
+<h3>8.3 Reverse proxy (nginx)</h3>
+<pre><code>server {
+    listen 443 ssl;
+    server_name bhumichat.example.gov.bd;
+
+    ssl_certificate     /etc/ssl/certs/bhumi.crt;
+    ssl_certificate_key /etc/ssl/private/bhumi.key;
+
+    root /opt/bhumi-chatbot/www;   # index.html, data.js, docs.js, app.js
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8790;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre>
+<div class="note">
+  <b>CORS.</b> The API sends <code>Access-Control-Allow-Origin: *</code> and handles <code>OPTIONS</code> pre-flight. If you
+  serve the UI from the same origin as the API (recommended, as in the nginx config above), CORS is not exercised at all.
+  To restrict origins, edit the header value in <code>server.py</code> (<code>_send()</code>).
+</div>
+
+<h3>8.4 Security recommendations</h3>
+<ul>
+  <li>Use a <b>read-only</b> PostgreSQL role; the server never writes.</li>
+  <li>Prefer TLS to the database (<code>sslmode=require</code> or stricter).</li>
+  <li>Place the API behind the reverse proxy / firewall; do not expose port 8790 publicly.</li>
+  <li>Keep <code>.env</code> out of the web root and out of version control.</li>
+  <li>Consider a request timeout / rate limit at the proxy layer.</li>
+</ul>
+
+<h2 id="build">9. Rebuilding the offline dataset</h2>
+<p>Run these from the project root, in order:</p>
+<pre><code>python extract_pdfs.py     # optional: layer text from the curated PDFs into pdf_text/
+python build_data.py       # writes data.js  (uses the SQL export + pdf_source)
+python build_docs.py       # writes docs.js  (act / document text for document search)</code></pre>
+<p>Then bump the asset version in <code>index.html</code>:</p>
+<pre><code>&lt;script src="data.js?v=7"&gt;&lt;/script&gt;
+&lt;script src="docs.js?v=7"&gt;&lt;/script&gt;
+&lt;script src="app.js?v=7"&gt;&lt;/script&gt;</code></pre>
+<h4>Verify</h4>
+<pre><code>node test.js            # core answer tests
+node test_samples.js    # curated sample questions</code></pre>
+<div class="tip">
+  <b>Mode B parity.</b> The live dataset is built from the same pipeline. The only expected difference is which
+  near-duplicate question variant wins de-duplication; answers to real queries are identical.
+</div>
+
+<h2 id="monitor">10. Health checks &amp; monitoring</h2>
+<table>
+  <tr><th>Endpoint</th><th>Purpose</th><th>Healthy response</th></tr>
+  <tr><td><code>GET /api/health</code></td><td>DB connectivity + dataset state</td><td><code>{"ok":true, "dataset":&gt;0, "error":null}</code></td></tr>
+  <tr><td><code>GET /api/stats</code></td><td>Dataset size + per-table row counts</td><td><code>{"dataset":N, "rows":{...}, "error":null}</code></td></tr>
+</table>
+<pre><code># simple uptime check
+curl -fsS http://127.0.0.1:8790/api/health || echo "API DOWN"</code></pre>
+<p class="small">
+  The <code>error</code> field is <code>null</code> when healthy, otherwise one of
+  <code>no_connection</code>, <code>load_failed</code>, or <code>empty_dataset</code>.
+</p>
+
+<h2 id="trouble">11. Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+  <tr><td><code>connect failed: … password authentication failed</code></td><td>Bad credentials in <code>DATABASE_URL</code></td><td>Verify user/password/host/port; test with <code>psql</code>.</td></tr>
+  <tr><td><code>column "is_draft" does not exist</code></td><td>Querying a table whose schema differs from the export</td><td>Use the supported iLKMS schema / the six listed tables.</td></tr>
+  <tr><td><code>live DB unavailable (load_failed)</code></td><td>Network/SSL/role permissions</td><td>Check <code>pg_hba.conf</code>, <code>sslmode</code>, and grants.</td></tr>
+  <tr><td>UI shows offline answers only</td><td><code>window.__BHUMI_API__</code> empty or API unreachable</td><td>Set the API URL; confirm <code>/api/health</code> from the browser.</td></tr>
+  <tr><td>CORS error in browser console</td><td>Cross-origin API without allowed header</td><td>Serve UI and API from the same origin, or allow the origin.</td></tr>
+  <tr><td>Bengali renders as boxes / mojibake</td><td>Console/file encoding</td><td>Use UTF-8; on Windows run <code>chcp 65001</code> or set <code>PYTHONUTF8=1</code>.</td></tr>
+  <tr><td>Stale answers after DB update</td><td>Dataset cached at startup</td><td>Restart <code>server.py</code> (or schedule a restart).</td></tr>
+  <tr><td>Port already in use</td><td>Another process on 8790</td><td>Change <code>BHUMI_PORT</code> and update the UI URL.</td></tr>
+</table>
+
+<h2 id="checklist">12. Go-live checklist</h2>
+<ul>
+  <li>☐ <code>.env</code> created with a read-only <code>DATABASE_URL</code>; file not in version control.</li>
+  <li>☐ <code>python db_source.py</code> lists all six tables with rows.</li>
+  <li>☐ <code>python server.py</code> reports "live dataset ready".</li>
+  <li>☐ <code>/api/health</code> returns <code>ok:true</code> and a non-zero dataset.</li>
+  <li>☐ <code>window.__BHUMI_API__</code> set to the API base URL.</li>
+  <li>☐ UI answers correctly with the API up, and falls back gracefully with the API down.</li>
+  <li>☐ Service auto-restart configured (systemd / NSSM / Task Scheduler).</li>
+  <li>☐ Reverse proxy + TLS in place; API port not publicly exposed.</li>
+  <li>☐ Offline build re-verified with <code>node test.js</code> and <code>node test_samples.js</code>.</li>
+</ul>
+
+<footer>
+  ভূমি বন্ধু Chatbot — Deployment Guide · Generated for the Chatbot project · Pair with the API Integration Guide.
+</footer>
+
+</body>
+</html>

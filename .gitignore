@@ -1,0 +1,38 @@
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Source data exports -- regenerate with build_db.py / db_source.py
+*.sql
+*.sql.gz
+*.csv
+*.xlsx
+*.zip
+question_bank.md
+
+# Cached upstream + extracted PDF text
+bhumipedia_cache/
+pdf_text/
+extracted_pdfs/
+*.pdf
+
+# Temporary probe / debug scripts
+_*.js
+_*.py
+_*.json
+probe_check_fmt.js
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp

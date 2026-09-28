@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ভূমি বন্ধু Chatbot — API Integration Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Noto Sans Bengali", Arial, sans-serif;
+    color: #1d2b28; font-size: 10.5pt; line-height: 1.55; margin: 0;
+  }
+  h1, h2, h3, h4 { font-family: "Segoe UI", "Noto Sans Bengali", Arial, sans-serif; color: #0a4a3a; }
+  h1 { font-size: 24pt; margin: 0 0 4pt; }
+  h2 {
+    font-size: 15pt; margin: 22pt 0 8pt; padding: 5pt 9pt;
+    background: #0a4a3a; color: #fff; border-radius: 5pt; page-break-after: avoid;
+  }
+  h3 { font-size: 12pt; margin: 14pt 0 5pt; color: #0d6b4f; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; margin: 10pt 0 4pt; color: #12614a; page-break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code, pre, kbd { font-family: Consolas, "Courier New", monospace; }
+  code { background: #eef4f1; color: #0a4a3a; padding: 1pt 3pt; border-radius: 3pt; font-size: 9.5pt; }
+  pre {
+    background: #0f2a23; color: #d7f5e8; padding: 9pt 11pt; border-radius: 6pt;
+    font-size: 8.8pt; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word;
+    margin: 0 0 9pt; border-left: 3pt solid #25d399;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 10pt; font-size: 9.5pt; }
+  th, td { border: 1px solid #cfe0da; padding: 4.5pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #e6f3ee; color: #0a4a3a; font-weight: 600; }
+  tr:nth-child(even) td { background: #f6faf9; }
+  .cover {
+    border: 1.5pt solid #0a4a3a; border-radius: 8pt; padding: 18pt 20pt; margin-bottom: 16pt;
+    background: linear-gradient(140deg, #f2faf7, #e2f3ec);
+  }
+  .cover .kicker { font-size: 9.5pt; letter-spacing: 1.5pt; text-transform: uppercase; color: #0d6b4f; font-weight: 700; }
+  .cover .sub { font-size: 11pt; color: #2c4a42; margin-top: 4pt; }
+  .meta { margin-top: 12pt; font-size: 9pt; color: #40605a; }
+  .meta td { border: none; padding: 1pt 0; background: none !important; }
+  .meta td:first-child { width: 130pt; color: #0a4a3a; font-weight: 600; }
+  .note, .warn, .tip { border-radius: 5pt; padding: 8pt 11pt; margin: 0 0 10pt; font-size: 9.8pt; page-break-inside: avoid; }
+  .note { background: #eef4f1; border-left: 3pt solid #0d6b4f; }
+  .warn { background: #fdf1e7; border-left: 3pt solid #d97a2b; }
+  .tip  { background: #e9f6f0; border-left: 3pt solid #25d399; }
+  .note b, .warn b, .tip b { color: #0a4a3a; }
+  .toc { background: #f6faf9; border: 1px solid #cfe0da; border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 6pt; }
+  .toc h3 { margin-top: 0; }
+  .toc ol { margin-bottom: 0; }
+  .toc a { color: #0d6b4f; text-decoration: none; }
+  .method { display: inline-block; font-size: 8.5pt; font-weight: 700; padding: 1pt 7pt; border-radius: 3pt; background: #25d399; color: #063427; margin-right: 5pt; }
+  .endpoint { font-family: Consolas, monospace; font-size: 11pt; color: #0a4a3a; }
+  .type { display: inline-block; font-family: Consolas, monospace; font-size: 9pt; font-weight: 700; padding: 1pt 6pt; border-radius: 3pt; margin-right: 4pt; }
+  .t-data { background: #d7f0e6; color: #0a4a3a; }
+  .t-small { background: #e3ecff; color: #23418a; }
+  .t-none { background: #fde8d8; color: #8a4a12; }
+  .t-doc { background: #efe3fb; color: #5a2b8a; }
+  .small { font-size: 9pt; color: #4a6a63; }
+  hr { border: none; border-top: 1px solid #cfe0da; margin: 16pt 0; }
+  .pagebreak { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  footer { margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #cfe0da; font-size: 8.5pt; color: #6a857e; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">API Integration Guide</div>
+  <h1>ভূমি বন্ধু Chatbot API</h1>
+  <div class="sub">HTTP JSON API for Bengali land-law question answering, backed by the live iLKMS database</div>
+  <table class="meta">
+    <tr><td>Base URL</td><td><code>http://&lt;host&gt;:8790</code> (default)</td></tr>
+    <tr><td>Protocol</td><td>HTTP/1.1, UTF-8 JSON, CORS enabled</td></tr>
+    <tr><td>Authentication</td><td>None (place behind your own gateway if required)</td></tr>
+    <tr><td>Implemented by</td><td><code>server.py</code> (Python standard library)</td></tr>
+    <tr><td>Audience</td><td>Frontend &amp; backend integrators</td></tr>
+  </table>
+</div>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#overview">Overview &amp; concepts</a></li>
+    <li><a href="#endpoints">Endpoints</a></li>
+    <li><a href="#search">GET /api/search</a></li>
+    <li><a href="#responses">Response types &amp; examples</a></li>
+    <li><a href="#fields">Field reference</a></li>
+    <li><a href="#health">GET /api/health and /api/stats</a></li>
+    <li><a href="#errors">Errors &amp; status codes</a></li>
+    <li><a href="#cors">CORS</a></li>
+    <li><a href="#client">Integrating the bundled UI (app.js)</a></li>
+    <li><a href="#examples">Code examples (curl, JS, Python, PHP)</a></li>
+    <li><a href="#scoring">How answers are chosen</a></li>
+    <li><a href="#bestpractice">Best practices</a></li>
+  </ol>
+</div>
+
+<h2 id="overview">1. Overview &amp; concepts</h2>
+<p>
+  The API exposes a single question-answering operation. You send a natural-language question (Bengali or English) and
+  receive the best matching answer from a dataset built from the iLKMS land-law database. The server reuses the exact
+  same extraction pipeline and scoring logic as the browser client, so responses match the offline build.
+</p>
+<ul>
+  <li><b>Dataset.</b> Built once at server start from the six iLKMS tables and held in memory.</li>
+  <li><b>Language.</b> Pass <code>lang=bn</code> (default) or <code>lang=en</code> for language-aware routing and small talk.</li>
+  <li><b>Answer types.</b> Every response is tagged with a <code>type</code>: <code>data</code>, <code>small</code>, <code>none</code>, or <code>doc_blocked</code>.</li>
+  <li><b>Stateless.</b> No sessions or cookies; each request is independent.</li>
+</ul>
+
+<h2 id="endpoints">2. Endpoints</h2>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+  <tr><td><span class="method">GET</span></td><td class="endpoint">/api/search</td><td>Answer a question</td></tr>
+  <tr><td><span class="method">GET</span></td><td class="endpoint">/api/health</td><td>Database connectivity &amp; dataset state</td></tr>
+  <tr><td><span class="method">GET</span></td><td class="endpoint">/api/stats</td><td>Dataset size &amp; per-table row counts</td></tr>
+  <tr><td><span class="method">OPTIONS</span></td><td class="endpoint">/api/*</td><td>CORS pre-flight (returns 200)</td></tr>
+</table>
+
+<h2 id="search">3. <span class="method">GET</span> /api/search</h2>
+<p>Returns the best answer for a question.</p>
+<h4>Query parameters</h4>
+<table>
+  <tr><th>Name</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  <tr><td><code>q</code></td><td>Yes</td><td>—</td><td>The user's question (URL-encoded UTF-8). Empty ⇒ 400.</td></tr>
+  <tr><td><code>lang</code></td><td>No</td><td><code>bn</code></td><td><code>bn</code> or <code>en</code>; affects small-talk text and template routing.</td></tr>
+</table>
+<h4>Example request</h4>
+<pre><code>GET /api/search?q=%E0%A6%A8%E0%A6%BE%E0%A6%AE%E0%A6%9C%E0%A6%BE%E0%A6%B0%E0%A6%BF%20%E0%A6%AB%E0%A6%BF&amp;lang=bn
+# decodes to: q=নামজারি ফি</code></pre>
+
+<h2 id="responses">4. Response types &amp; examples</h2>
+<p>All responses are JSON objects. The <code>type</code> field determines which other fields are present.</p>
+
+<h3><span class="type t-data">data</span> A dataset answer was found</h3>
+<pre><code>{
+  "type": "data",
+  "entry": {
+    "q": "নামজারি ফি",
+    "a": "**সংক্ষেপে:**\n• নির্ধারিত ফি ছাড়া এক টাকাও নেওয়া যাবে না।\n• …",
+    "more": "…optional extended text…",
+    "t": 0
+  },
+  "score": 1000,
+  "offline": { "dataset": 46853, "rows": { "acts_acts": 349, "…": 0 } }
+}</code></pre>
+<ul>
+  <li><code>entry.q</code> — the matched canonical question.</li>
+  <li><code>entry.a</code> — the answer (may contain <code>**bold**</code> and <code>•</code> bullets / numbered lines).</li>
+  <li><code>entry.more</code> — present only when a longer "more details" text exists.</li>
+  <li><code>entry.t</code> — <code>1</code> if the entry is a template (act-level) question, else <code>0</code>/absent.</li>
+  <li><code>score</code> — match confidence; <code>1000</code> means an exact normalized match.</li>
+</ul>
+
+<h3><span class="type t-small">small</span> Small talk / greeting</h3>
+<pre><code>{
+  "type": "small",
+  "text": "ওয়ালাইকুম আসসালাম! 🌿 ভূমি সংক্রান্ত কী জানতে চান?",
+  "offline": { "dataset": 46853, "rows": { "…": 0 } }
+}</code></pre>
+<p>Detected greetings, name/help/thanks/goodbye intents. Return <code>text</code> directly.</p>
+
+<h3><span class="type t-none">none</span> No confident answer</h3>
+<pre><code>{
+  "type": "none",
+  "suggestions": ["খতিয়ান কি?", "নামজারি কীভাবে করবো?", "ভূমি উন্নয়ন খাজনা আইন, ২০২৩"],
+  "offline": { "dataset": 46853, "rows": { "…": 0 } }
+}</code></pre>
+<p>Render a friendly "not found" message and offer the suggested questions as clickable chips.</p>
+
+<h3><span class="type t-doc">doc_blocked</span> Template match blocked (use document search)</h3>
+<pre><code>{
+  "type": "doc_blocked",
+  "query": "ভূমি সংস্কার আইন, ২০২৩",
+  "offline": { "dataset": 46853, "rows": { "…": 0 } }
+}</code></pre>
+<div class="note">
+  <b>Client-side handling.</b> The bundled <code>app.js</code> responds to <code>doc_blocked</code> by falling back to its
+  local document search (<code>docs.js</code>) and rendering a quoted document excerpt. If you integrate the API directly,
+  treat <code>doc_blocked</code> as "no dataset answer; try your own document search or show suggestions."
+</div>
+
+<h2 id="fields">5. Field reference</h2>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Present when</th><th>Notes</th></tr>
+  <tr><td><code>type</code></td><td>string</td><td>always</td><td><code>data</code> | <code>small</code> | <code>none</code> | <code>doc_blocked</code></td></tr>
+  <tr><td><code>entry</code></td><td>object</td><td><code>type=data</code></td><td>Matched Q&amp;A entry</td></tr>
+  <tr><td><code>entry.q</code></td><td>string</td><td><code>type=data</code></td><td>Canonical question</td></tr>
+  <tr><td><code>entry.a</code></td><td>string</td><td><code>type=data</code></td><td>Answer body (Bengali; markdown-lite)</td></tr>
+  <tr><td><code>entry.more</code></td><td>string</td><td>optional</td><td>Extended detail for "more" follow-ups</td></tr>
+  <tr><td><code>entry.t</code></td><td>number</td><td>optional</td><td><code>1</code> = template entry</td></tr>
+  <tr><td><code>score</code></td><td>number</td><td><code>type=data</code></td><td>0–100, or 1000 for exact match</td></tr>
+  <tr><td><code>text</code></td><td>string</td><td><code>type=small</code></td><td>Small-talk reply</td></tr>
+  <tr><td><code>suggestions</code></td><td>string[]</td><td><code>type=none</code></td><td>Up to 3 suggested questions</td></tr>
+  <tr><td><code>query</code></td><td>string</td><td><code>type=doc_blocked</code></td><td>Original query</td></tr>
+  <tr><td><code>offline</code></td><td>object</td><td>always (search)</td><td><code>{dataset, rows}</code> — dataset size &amp; table counts</td></tr>
+</table>
+
+<h2 id="health">6. <span class="method">GET</span> /api/health and /api/stats</h2>
+<h4>/api/health</h4>
+<pre><code>{
+  "ok": true,
+  "dataset": 46853,
+  "rows": {
+    "acts_acts": 349, "acts_sections": 1301, "acts_subsections": 3233,
+    "acts_schedules": 931, "acts_subschedules": 73, "blogs_blog": 32
+  },
+  "error": null
+}</code></pre>
+<ul>
+  <li><code>ok</code> — <code>true</code> when a live DB connection answers <code>SELECT 1</code>.</li>
+  <li><code>error</code> — <code>null</code> when healthy; otherwise <code>no_connection</code>, <code>load_failed</code>, or <code>empty_dataset</code>.</li>
+</ul>
+<h4>/api/stats</h4>
+<pre><code>{ "dataset": 46853, "rows": { "acts_acts": 349, "…": 0 }, "error": null }</code></pre>
+<p class="small">Use <code>/api/health</code> for readiness/liveness probes; <code>/api/stats</code> for monitoring dashboards.</p>
+
+<h2 id="errors">7. Errors &amp; status codes</h2>
+<table>
+  <tr><th>Status</th><th>Body</th><th>Meaning</th></tr>
+  <tr><td><code>200</code></td><td>answer object</td><td>Success (including <code>type=none</code>)</td></tr>
+  <tr><td><code>400</code></td><td><code>{"error":"missing 'q' param"}</code></td><td><code>q</code> missing or blank</td></tr>
+  <tr><td><code>404</code></td><td><code>{"error":"not found"}</code></td><td>Unknown path</td></tr>
+  <tr><td><code>500</code></td><td><code>{"error":"…"}</code></td><td>Unexpected server error</td></tr>
+</table>
+<div class="warn">
+  <b>Network failure is not an HTTP error.</b> If the API process is down, the request fails at the transport layer. Your
+  client should catch that and fall back to the bundled <code>data.js</code> (as <code>app.js</code> does) or show an
+  offline message.
+</div>
+
+<h2 id="cors">8. CORS</h2>
+<p>Every response includes:</p>
+<pre><code>Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, OPTIONS
+Access-Control-Allow-Headers: Content-Type</code></pre>
+<p><code>OPTIONS</code> pre-flight requests receive <code>200 {"ok":true}</code>. To restrict origins, edit the
+<code>Access-Control-Allow-Origin</code> value in <code>server.py</code> (<code>_send()</code>). Serving the UI from the
+same origin as the API avoids CORS entirely.</p>
+
+<h2 id="client">9. Integrating the bundled UI (app.js)</h2>
+<p>The client is already wired for API-first with offline fallback. To enable it, set the base URL in
+<code>index.html</code> before <code>app.js</code> loads:</p>
+<pre><code>&lt;script&gt;window.__BHUMI_API__ = "http://127.0.0.1:8790";&lt;/script&gt;</code></pre>
+<p>Behaviour in <code>app.js</code>:</p>
+<ol>
+  <li>If <code>__BHUMI_API__</code> is empty ⇒ always use the bundled dataset.</li>
+  <li>Otherwise <code>respondLive()</code> calls <code>/api/search?q=…&amp;lang=…</code> with a 4-second timeout.</li>
+  <li>On <code>type=data</code> it renders <code>entry.a</code> and appends a local document citation when one scores high.</li>
+  <li>On <code>type=small</code> / <code>type=none</code> it renders the text / suggestions.</li>
+  <li>On any network error or unexpected payload it sets <code>LIVE_DOWN = true</code> and falls back to the local
+      <code>findAnswer()</code> for the rest of the session.</li>
+</ol>
+<div class="tip">
+  <b>Version bump.</b> After editing <code>app.js</code>, bump the <code>?v=</code> query on the script tags in
+  <code>index.html</code> to defeat browser caching.
+</div>
+
+<h2 id="examples">10. Code examples</h2>
+
+<h3>10.1 cURL</h3>
+<pre><code>curl -s "http://127.0.0.1:8790/api/search?q=%E0%A6%96%E0%A6%A4%E0%A6%BF%E0%A6%AF%E0%A6%BE%E0%A6%A8%20%E0%A6%95%E0%A6%BF%3F&amp;lang=bn"</code></pre>
+
+<h3>10.2 JavaScript (browser / Node 18+)</h3>
+<pre><code>async function ask(q, lang = "bn") {
+  const url = `http://127.0.0.1:8790/api/search?q=${encodeURIComponent(q)}&amp;lang=${lang}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const d = await res.json();
+  switch (d.type) {
+    case "data":  return d.entry.a;
+    case "small": return d.text;
+    case "none":  return "No answer. Try: " + d.suggestions.join(", ");
+    case "doc_blocked": return "No dataset answer; try document search.";
+    default: throw new Error("bad payload");
+  }
+}
+
+ask("নামজারি ফি").then(console.log).catch(console.error);</code></pre>
+
+<h3>10.3 Python</h3>
+<pre><code>import json, urllib.parse, urllib.request
+
+def ask(q, lang="bn", base="http://127.0.0.1:8790"):
+    url = base + "/api/search?" + urllib.parse.urlencode({"q": q, "lang": lang})
+    with urllib.request.urlopen(url, timeout=10) as r:
+        d = json.loads(r.read().decode("utf-8"))
+    if d["type"] == "data":
+        return d["entry"]["a"]
+    if d["type"] == "small":
+        return d["text"]
+    if d["type"] == "none":
+        return "No answer. Suggestions: " + ", ".join(d["suggestions"])
+    return "No dataset answer."
+
+print(ask("খতিয়ান কি?"))</code></pre>
+
+<h3>10.4 PHP</h3>
+<pre><code>&lt;?php
+function ask($q, $lang = 'bn', $base = 'http://127.0.0.1:8790') {
+    $url = $base . '/api/search?' . http_build_query(['q' =&gt; $q, 'lang' =&gt; $lang]);
+    $raw = file_get_contents($url);
+    if ($raw === false) return 'offline';
+    $d = json_decode($raw, true);
+    if ($d['type'] === 'data')  return $d['entry']['a'];
+    if ($d['type'] === 'small') return $d['text'];
+    if ($d['type'] === 'none')  return 'Try: ' . implode(', ', $d['suggestions']);
+    return 'No dataset answer.';
+}
+echo ask('নামজারি কীভাবে করবো?');</code></pre>
+
+<h2 id="scoring">11. How answers are chosen</h2>
+<ul>
+  <li><b>Normalization.</b> Text is lower-cased, punctuation stripped, digits mapped to Bengali, and common
+      spelling variants folded (e.g. <code>ী→ি</code>, <code>ষ→স</code>, <code>শ→স</code>, <code>ভুমি→জমি</code>).</li>
+  <li><b>Scoring.</b> Weighted token overlap (longer tokens weigh more) with prefix partial credit; an exact normalized
+      match scores <code>1000</code>.</li>
+  <li><b>Threshold.</b> A dataset answer is returned only at/above the confidence threshold (<code>70</code>); otherwise
+      document search, small talk, or <code>type=none</code> suggestions are returned.</li>
+  <li><b>Tie-break.</b> Equal scores prefer the most concise, lexically closest question.</li>
+  <li><b>Templates.</b> Act-level template questions require an intent word (e.g. fee, how, apply) before being served,
+      otherwise the server reports <code>doc_blocked</code>.</li>
+</ul>
+
+<h2 id="bestpractice">12. Best practices</h2>
+<ul>
+  <li><b>Always handle transport failure</b> and fall back to <code>data.js</code> for uninterrupted service.</li>
+  <li><b>URL-encode</b> <code>q</code> (Bengali is multi-byte UTF-8).</li>
+  <li><b>Set a client timeout</b> (the bundled client uses 4 s).</li>
+  <li><b>Cache</b> responses for identical questions where appropriate; answers change only on server restart/DB update.</li>
+  <li><b>Probe</b> <code>/api/health</code> for readiness; restart the server to refresh the dataset.</li>
+  <li><b>Keep the API internal</b> behind your gateway; it has no authentication.</li>
+  <li><b>Respect UTF-8</b> end to end (headers, database client encoding, proxy).</li>
+</ul>
+
+<footer>
+  ভূমি বন্ধু Chatbot — API Integration Guide · Generated for the Chatbot project · Pair with the Deployment Guide.
+</footer>
+
+</body>
+</html>
