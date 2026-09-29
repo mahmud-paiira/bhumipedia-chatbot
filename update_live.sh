@@ -13,6 +13,7 @@ cd "$HERE"
 PYTHON_CMD="${PYTHON:-python3}"
 LOG_DIR="${LOG_DIR:-logs}"
 CRON_SCHED="${CRON_SCHED:-0 0 * * *}"
+KEEP_LOGS="${KEEP_LOGS:-3}"
 EXTRA=()
 
 MODE="auto"
@@ -41,7 +42,8 @@ usage: update_live.sh [--cron | --manual] [--no-refresh] [--portal] [--docs]
   --portal     also refresh the Bhumipedia portal cache.
   --docs       also rebuild docs.js (downloads act PDFs).
 
-Env: PYTHON=... (default python3), LOG_DIR=logs, CRON_SCHED='0 0 * * *'.
+Env: PYTHON=... (default python3), LOG_DIR=logs, CRON_SCHED='0 0 * * *',
+     KEEP_LOGS=3 (update-*.log files kept after each --cron run).
 Exit codes: 0 deployed, 1 rolled back/failed, 2 usage.
 EOF
       exit 0 ;;
@@ -96,6 +98,8 @@ if [[ "$MODE" == "cron" ]]; then
   "$PYTHON_CMD" update_datasets.py --quiet "${EXTRA[@]}" >>"$OUT" 2>&1 || rc=$?
   render_summary >>"$OUT" 2>&1
   echo "[$(date '+%F %T')] update_live rc=$rc log=$OUT" >>"$LOG_DIR/cron.log"
+  # keep only the newest $KEEP_LOGS run logs
+  ls -1t "$LOG_DIR"/update-*.log 2>/dev/null | tail -n +"$((KEEP_LOGS + 1))" | xargs -r rm -f || true
   echo "run finished: rc=$rc  full log: $OUT"
   exit "$rc"
 fi
