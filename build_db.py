@@ -1,10 +1,16 @@
 """Extract Q&A pairs from iLKMS PostgreSQL dump (acts/sections/subsections/schedules/blogs)."""
+import gzip
 import html
+import json
 import os
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SQL_PATH = os.path.join(HERE, "d71_ilkms_5000_dump_2026.08.23.sql")
+# Frozen copy of the DB-derived Q&A, so the dataset can be rebuilt (and the
+# live sources refreshed) without the SQL dump or a database. Rewritten every
+# time extract_db() runs against real tables.
+SNAPSHOT_PATH = os.path.join(HERE, "db_snapshot.json.gz")
 
 JUNK_TITLE_RE = re.compile(
     r"^(test|saba|fdfd|asdf|demo|dummy|sample|abc|qwerty|zzz)\b", re.I)
@@ -238,6 +244,19 @@ def load_tables_from_sql(path=None):
     return _parse_tables(text)
 
 
+def load_snapshot(path=None):
+    with gzip.open(path or SNAPSHOT_PATH, "rt", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_snapshot(items, path=None):
+    path = path or SNAPSHOT_PATH
+    tmp = path + ".new"
+    with gzip.open(tmp, "wt", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
 def extract_db(tables=None):
     """Build Q&A pairs from a tables dict.
 
@@ -245,9 +264,17 @@ def extract_db(tables=None):
     loaded from the SQL dump file (SQL_PATH), preserving the previous behavior.
     A live PostgreSQL source can pass the same structure via
     db_source.load_tables_from_db().
+
+    With no dump on disk, the DB-derived rows come from SNAPSHOT_PATH instead
+    and only the external sources below are rebuilt.
     """
+    snapshot = None
     if tables is None:
-        tables = load_tables_from_sql()
+        if os.path.exists(SQL_PATH) or not os.path.exists(SNAPSHOT_PATH):
+            tables = load_tables_from_sql()
+        else:
+            snapshot = load_snapshot()
+            tables = {}
     tb = tables
 
     def rows(name):
@@ -849,6 +876,14 @@ def extract_db(tables=None):
             faq_rows += add_many(
                 ["ফি", "ফি সমূহ", "ফি কি কি?", "ফি কয়টি?", "ফি তালিকা"],
                 fee_ans)
+
+    if snapshot is not None:
+        out = list(snapshot)
+        taken = {re.sub(r"\s+", " ", it["q"].lower()).strip() for it in out}
+        print(f"[build_db] no SQL dump; using {len(out)} rows from "
+              f"{os.path.basename(SNAPSHOT_PATH)}")
+    elif tables and out:
+        save_snapshot(out)
 
     # ---- External PDF corpus (text-layered documents) ----
     try:
