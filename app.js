@@ -310,8 +310,8 @@
   /* ---- related questions, ranked against the dataset ------------------
      Used while the user is still typing: takes the questions closest to the
      partial text in DATASET and offers them as tappable chips above the
-     input box. The single best match is skipped because that one becomes the
-     answer itself, so the chips are genuine alternatives.                   */
+     input box. The single best match is surfaced first (it is the answer
+     itself), followed by genuine alternatives.                               */
 
   var SUG_MIN_CHARS = 3;
   var SUG_MAX = 6;
@@ -439,7 +439,10 @@
       }
     }
     best.sort(sugCmp);
-    best.shift(); // drop the winner: that is the answer, not a suggestion
+    if (!best.length) return [];
+    // The winner is the answer's own question (e.g. typing "খতিয়ান" answers
+    // "খতিয়ান কি?"), so it leads the dropdown instead of being hidden — that
+    // way an exact new FAQ is always visible in the suggestions too.
     return best.map(function (x) { return x.q; });
   }
 

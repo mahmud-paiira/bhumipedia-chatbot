@@ -62,15 +62,38 @@ def _count_dataset(path=DATA_JS):
         return None
 
 
-def _captured_build(refresh, portal):
+class _StreamingBuffer(io.StringIO):
+    """StringIO that also forwards every line to the real stdout.
+
+    Lets `--quiet` keep a machine-friendly one-line-per-stage output for cron
+    while the interactive `update_live.ps1`/`update_live.sh` wrappers still see
+    each source's progress line as it is produced.
+    """
+
+    def __init__(self, stream):
+        super().__init__()
+        self._stream = stream
+
+    def write(self, s):
+        try:
+            self._stream.write(s)
+            self._stream.flush()
+        except Exception:  # noqa: BLE001  progress is best-effort
+            pass
+        return super().write(s)
+
+
+def _captured_build(refresh, portal, stream=False):
     """Refresh caches (if asked) and rebuild rows, capturing source output.
 
     Returns (rows_or_None, log_tail). Sources degrade gracefully on network
     failure (they fall back to their disk caches), so a bad fetch never aborts
-    the run by itself.
+    the run by itself. When `stream` is true, every line the sources print is
+    also forwarded live to the terminal as it is produced.
     """
     buf = io.StringIO()
-    real, sys.stdout = sys.stdout, buf
+    real = sys.stdout
+    sys.stdout = _StreamingBuffer(real) if stream else buf
     try:
         if refresh:
             import api_source
@@ -143,7 +166,8 @@ def main():
     if prev is None:
         _warn(f"cannot read current {os.path.basename(DATA_JS)} size", status)
 
-    rows, log_tail = _captured_build(args.refresh, args.portal)
+    rows, log_tail = _captured_build(args.refresh, args.portal,
+                                     stream=not args.quiet)
     build_s = time.perf_counter() - t
     if rows is None or not rows:
         status["error"] = "build produced no rows; keeping existing dataset"
@@ -239,5 +263,5 @@ def _finish(status, code):
 if __name__ == "__main__":
     if hasattr(sys.stdout, "buffer"):
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
-                                      errors="replace")
+                                      errors="replace", line_buffering=True)
     sys.exit(main())

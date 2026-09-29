@@ -75,10 +75,10 @@ if (g1.type === "none" && g1.suggestions.length === 3) pass++; else fail++;
 console.log("\nliveSuggest checks:");
 const sugTests = [
   // [typed text, how many results, substring every result must share]
-  ["নামজারি ফি", 5, null],
-  ["মৌজা", 5, "মৌজা"],
-  ["খতিয়ান", 5, "খতিয়ান"],
-  ["খাজনা", 5, "খাজনা"],
+  ["নামজারি ফি", 6, null],
+  ["মৌজা", 6, "মৌজা"],
+  ["খতিয়ান", 6, "খতিয়ান"],
+  ["খাজনা", 6, "খাজনা"],
   ["xyzabc", 0, null],
   ["কি", 0, null],
   ["ধারা", 0, null],            // matches 25k questions: nothing worth showing
@@ -90,7 +90,7 @@ for (const [q, want, must] of sugTests) {
   const uniq = new Set(list.map((s) => api.norm(s)));
   let ok = list.length === want && uniq.size === list.length;
   if (ok && must) ok = list.every((s) => s.includes(must));
-  if (ok && want > 0) ok = !list.includes(q); // the query itself is the answer
+  if (ok && want > 0) ok = !list.includes(q); // never repeat the typed text verbatim
   if (ok) pass++; else fail++;
   console.log(
     `${ok ? "PASS" : "FAIL"} | liveSuggest("${q}") -> ${list.length} hits` +
