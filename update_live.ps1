@@ -92,16 +92,11 @@ try {
         New-Item -ItemType Directory -Force -Path $logDir | Out-Null
         $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
         $out = Join-Path $logDir ("update-{0}.log" -f $stamp)
-        $runner = & $python update_datasets.py --quiet @extra 2>&1
+        & $python update_datasets.py --quiet @extra 2>&1 | Tee-Object -FilePath $out
         $rc = $LASTEXITCODE
-        $runner | Out-File -LiteralPath $out -Encoding UTF8
         Render-Summary | Add-Content -LiteralPath $out -Encoding UTF8
         Add-Content -LiteralPath (Join-Path $logDir 'cron.log') -Encoding UTF8 -Value `
             ("[{0}] update_live rc={1} log={2}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $rc, $out)
-        $host.UI.WriteErrorLine('')
-        $host.UI.WriteErrorLine('--- run output ---')
-        $host.UI.WriteErrorLine(($runner -join "`n"))
-        $host.UI.WriteErrorLine('------------------')
         Write-Output "run finished: rc=$rc  full log: $out"
         exit $rc
     }
