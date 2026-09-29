@@ -24,10 +24,11 @@ pdf_text/
 extracted_pdfs/
 *.pdf
 
-# Background job artifacts (update_datasets.py)
+# Background job artifacts (update_datasets.py / update_live.sh)
 data.js.bak
 data.js.new
 dataset_update.json
+logs/
 
 # Temporary probe / debug scripts
 _*.js
