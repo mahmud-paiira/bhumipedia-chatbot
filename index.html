@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ভূমি বন্ধু — ভূমি সেবা চ্যাটবট</title>
+<title>ভূমিবিদ  — ভূমি সেবা চ্যাটবট</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -45,12 +45,11 @@
   }
   .avatar{
     position:relative;width:46px;height:46px;border-radius:15px;flex:none;
-    background:linear-gradient(135deg,#00c48c,#0a7a58);
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 8px 20px rgba(0,196,140,.38);
     overflow:hidden;
   }
-  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .avatar img{width:100%;height:100%;object-fit:cover;object-position:left center;display:block}
   .avatar::after{
     content:"";position:absolute;right:2px;bottom:2px;width:11px;height:11px;border-radius:50%;
     background:#35e6a6;border:2px solid #063427;
@@ -59,7 +58,7 @@
   h1{font-size:18.5px;font-weight:700;line-height:1.25;letter-spacing:.2px}
   h1 small{display:inline-block;font-size:10px;font-weight:600;color:#0faa79;background:rgba(15,170,121,.16);
     border:1px solid rgba(15,170,121,.45);padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
-  .status{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:2px}
+  .status{font-size:12.5px;color:var(--muted);display:none;align-items:center;gap:6px;margin-top:2px}
   .dot{width:8px;height:8px;border-radius:50%;background:#35e6a6;animation:pulse 2s infinite}
   @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(53,230,166,0)}100%{box-shadow:0 0 0 0 rgba(53,230,166,0)}}
   .hbtns{display:flex;gap:8px;flex:none}
@@ -184,10 +183,10 @@
 <div class="app">
   <header>
     <div class="avatar">
-      <img src="bhumi-pedia-logo.png" alt="ভূমি বন্ধু লোগো">
+      <img src="Bhumipedia-logo.png" alt="ভূমিবিদ লোগো">
     </div>
     <div class="titles">
-      <h1>ভূমি বন্ধু <small>OFFLINE</small></h1>
+      <h1>ভূমিবিদ </h1>
       <div class="status"><span class="dot"></span><span id="statusTxt">চ্যাটবট প্রস্তুত হচ্ছে…</span></div>
     </div>
     <div class="hbtns">
@@ -205,8 +204,7 @@
       <button class="send" type="submit" title="পাঠান"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 20.85 12 3.4 3.6l2.5 7.2H15l-2 3.9z"/></svg></button>
     </form>
   </div>
-  <div class="hint"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 4h2v8h-2zm0 10h2v2h-2z"/></svg><span>এন্টার চাপুন • সম্পূর্ণ অফলাইনে চলে • কোনো ইন্টারনেট লাগে না</span></div>
-  <footer>উৎস: iLKMS আইন-বিধি, ধারা ও ব্লগ ডাটাবেস • বাংলা ও ইংরেজি উভয় ভাষায় চ্যাট করা যায়</footer>
+  <footer>পরিকল্পনা ও বাস্তবায়নে ভূমি মন্ত্রণালয়<br>কারিগরি সহায়তায় ড্রিম ৭১ বাংলাদেশ লিমিটেড</footer>
 </div>
 
 <script src="data.js?v=9"></script>
